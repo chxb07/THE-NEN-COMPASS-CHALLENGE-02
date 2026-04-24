@@ -1,0 +1,685 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--panel:#10101a;--border:#2a2a3a;
+  --gold:#c8a84b;--red:#c84b4b;--blue:#4b8bc8;--green:#4bc87a;
+  --purple:#9b4bc8;--orange:#c87a4b;--pink:#c84b8b;--cyan:#4bc8c8;
+  --fog:#0a0a0f;--wall:#1a1520;--path-bg:#12121e;
+}
+body{background:var(--bg);color:#e0d5c8;font-family:'Share Tech Mono',monospace;min-height:100vh;overflow:hidden}
+#root{display:flex;flex-direction:column;height:100vh;max-height:100vh}
+
+/* AFFINITY SCREEN */
+#affinity-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:20px;padding:20px;background:radial-gradient(ellipse at center,#1a0d2e 0%,#0a0a0f 70%)}
+.game-title{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);letter-spacing:3px;text-align:center;line-height:1.4}
+.subtitle{font-size:11px;color:#666;letter-spacing:2px;text-align:center}
+.biscuit-quote{font-size:11px;color:#8a7a6a;max-width:420px;text-align:center;border-left:2px solid var(--gold);padding-left:12px;line-height:1.6;font-style:italic}
+.affinity-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:520px;width:100%}
+.aff-btn{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px 10px;cursor:pointer;transition:all .2s;text-align:center;position:relative;overflow:hidden}
+.aff-btn:hover{transform:translateY(-2px);border-color:var(--aff-color,var(--gold))}
+.aff-btn.selected{border-color:var(--aff-color,var(--gold));background:#1a1a2a;box-shadow:0 0 12px var(--aff-color,var(--gold))22}
+.aff-name{font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--aff-color,#e0d5c8);margin-bottom:4px}
+.aff-desc{font-size:9px;color:#666;line-height:1.4}
+.aff-costs{font-size:8px;margin-top:6px;color:#888}
+.start-btn{background:linear-gradient(135deg,#1a0a00,#2a1500);border:1px solid var(--gold);border-radius:6px;padding:12px 40px;font-family:'Cinzel',serif;font-size:14px;color:var(--gold);cursor:pointer;letter-spacing:2px;transition:all .2s}
+.start-btn:hover:not(:disabled){background:linear-gradient(135deg,#2a1500,#3a2000);box-shadow:0 0 20px #c8a84b44}
+.start-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* GAME SCREEN */
+#game-screen{display:none;flex-direction:column;height:100vh;padding:6px;gap:6px}
+.top-bar{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.top-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:10px}
+.game-title-sm{font-family:'Cinzel',serif;color:var(--gold);font-size:11px;letter-spacing:1px}
+.stat-label{color:#666;font-size:9px}
+.stat-val{color:#e0d5c8;font-size:12px;font-weight:600}
+.stat-block{display:flex;flex-direction:column;gap:1px}
+
+/* COMPASS */
+#compass-ui{background:var(--panel);border:1px solid var(--border);border-radius:50%;width:64px;height:64px;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;margin-left:auto}
+.compass-rose{position:relative;width:48px;height:48px}
+.compass-dir{position:absolute;font-size:8px;font-weight:700;color:#444}
+.compass-dir.N{top:-2px;left:50%;transform:translateX(-50%)}
+.compass-dir.S{bottom:-2px;left:50%;transform:translateX(-50%)}
+.compass-dir.E{right:-2px;top:50%;transform:translateY(-50%)}
+.compass-dir.W{left:-2px;top:50%;transform:translateY(-50%)}
+#compass-needle{position:absolute;top:50%;left:50%;width:2px;height:18px;background:linear-gradient(to bottom,var(--gold),transparent);transform-origin:bottom center;transition:transform .4s ease}
+#compass-dist{position:absolute;bottom:-14px;width:64px;text-align:center;font-size:8px;color:var(--gold)}
+.compass-pulse{animation:cpulse 1.5s ease-in-out infinite}
+@keyframes cpulse{0%,100%{box-shadow:0 0 4px var(--gold)44}50%{box-shadow:0 0 12px var(--gold)88}}
+
+/* MAIN AREA */
+.main-area{display:flex;gap:6px;flex:1;min-height:0}
+#canvas-wrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+canvas{image-rendering:pixelated;cursor:pointer}
+.fog-overlay{position:absolute;inset:0;pointer-events:none}
+
+/* SIDEBAR */
+.sidebar{width:160px;display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.side-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:8px;font-size:10px}
+.side-title{font-family:'Cinzel',serif;color:var(--gold);font-size:10px;margin-bottom:6px;border-bottom:1px solid #2a2a1a;padding-bottom:4px}
+.nen-legend{display:flex;flex-direction:column;gap:4px}
+.legend-row{display:flex;align-items:center;gap:6px}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.legend-name{font-size:9px;color:#888}
+.legend-cost{font-size:9px;color:#aaa;margin-left:auto}
+.log-area{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;max-height:180px}
+.log-entry{font-size:9px;padding:3px 6px;border-radius:2px;border-left:2px solid #333;line-height:1.4}
+.log-entry.info{border-color:#446;color:#aaa}
+.log-entry.move{border-color:var(--green);color:#7db;background:#0a1a0f}
+.log-entry.hunter{border-color:var(--red);color:#c88;background:#1a0a0a}
+.log-entry.warn{border-color:var(--orange);color:#ca8}
+.log-entry.win{border-color:var(--gold);color:var(--gold);background:#1a1500;font-weight:700}
+
+/* BOTTOM BAR */
+.bottom-bar{display:flex;gap:8px;flex-shrink:0;align-items:center}
+.path-info{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:10px;flex:1}
+.cost-table{display:flex;gap:4px;flex-wrap:wrap}
+.cost-pill{font-size:8px;padding:2px 6px;border-radius:10px;border:1px solid #333}
+
+/* MODAL */
+#modal{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:100;display:none}
+.modal-box{background:var(--panel);border:1px solid var(--gold);border-radius:8px;padding:32px;max-width:380px;width:90%;text-align:center;font-family:'Cinzel',serif}
+.modal-title{font-size:20px;color:var(--gold);margin-bottom:12px}
+.modal-sub{font-size:11px;color:#888;margin-bottom:20px;font-family:'Share Tech Mono',monospace;line-height:1.6}
+.modal-btn{background:var(--bg);border:1px solid var(--gold);border-radius:4px;padding:10px 24px;color:var(--gold);font-family:'Cinzel',serif;cursor:pointer;font-size:13px;transition:all .2s}
+.modal-btn:hover{background:#1a1500}
+</style>
+
+<!-- AFFINITY SCREEN -->
+<div id="affinity-screen">
+  <div class="game-title">GREED ISLAND<br>✦ NEN COMPASS CHALLENGE ✦</div>
+  <div class="subtitle">CHALLENGE 02 — THE LABYRINTH RACE</div>
+  <div class="biscuit-quote">"Choose your Nen affinity based on the maze, not your heart. The Shadow Hunter is an Emitter. It flies through open rooms. Force it into corridors." — Biscuit Krueger</div>
+  <div class="affinity-grid" id="affinity-grid"></div>
+  <button class="start-btn" id="start-btn" disabled onclick="startGame()">ENTER THE LABYRINTH</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen">
+  <div class="top-bar">
+    <div class="top-panel">
+      <div class="game-title-sm">NEN COMPASS</div>
+    </div>
+    <div class="top-panel">
+      <div class="stat-block"><div class="stat-label">AFFINITY</div><div class="stat-val" id="stat-aff" style="color:var(--gold)">—</div></div>
+    </div>
+    <div class="top-panel">
+      <div class="stat-block"><div class="stat-label">STEPS</div><div class="stat-val" id="stat-steps">0</div></div>
+    </div>
+    <div class="top-panel">
+      <div class="stat-block"><div class="stat-label">TOTAL COST</div><div class="stat-val" id="stat-cost">0</div></div>
+    </div>
+    <div class="top-panel">
+      <div class="stat-block"><div class="stat-label">HUNTER DIST</div><div class="stat-val" id="stat-hunter" style="color:var(--red)">—</div></div>
+    </div>
+    <div class="top-panel">
+      <div class="stat-block"><div class="stat-label">YOUR DIST</div><div class="stat-val" id="stat-pdist" style="color:var(--green)">—</div></div>
+    </div>
+    <div id="compass-ui" class="compass-pulse">
+      <div class="compass-rose">
+        <span class="compass-dir N">N</span>
+        <span class="compass-dir S">S</span>
+        <span class="compass-dir E">E</span>
+        <span class="compass-dir W">W</span>
+        <div id="compass-needle" style="transform:translate(-50%,-100%) rotate(0deg)"></div>
+      </div>
+      <div id="compass-dist">—</div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div id="canvas-wrap"><canvas id="maze-canvas"></canvas></div>
+    <div class="sidebar">
+      <div class="side-panel">
+        <div class="side-title">NEN TYPES</div>
+        <div class="nen-legend" id="nen-legend"></div>
+      </div>
+      <div class="side-panel" style="flex:1">
+        <div class="side-title">HUNTER LOG</div>
+        <div class="log-area" id="log-area"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="path-info">
+      <span style="color:#666;font-size:9px">A* PATH TO CENTER: </span>
+      <span id="path-info" style="color:var(--blue);font-size:10px">Calculating...</span>
+    </div>
+    <div class="top-panel">
+      <div class="stat-label">MOVE COSTS (your affinity vs nen type)</div>
+      <div class="cost-table" id="cost-table"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">—</div>
+    <div class="modal-sub" id="modal-sub">—</div>
+    <button class="modal-btn" onclick="resetGame()">PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+// ===== NEN TYPES =====
+const NEN = {
+  Enhancer:    {color:'#c87a4b',short:'ENH'},
+  Transmuter:  {color:'#9b4bc8',short:'TRN'},
+  Conjurer:    {color:'#4b8bc8',short:'CON'},
+  Manipulator: {color:'#4bc87a',short:'MAN'},
+  Emitter:     {color:'#c8c84b',short:'EMI'},
+  Specialist:  {color:'#c84b8b',short:'SPC'}
+};
+const NEN_KEYS = Object.keys(NEN);
+
+// Movement cost table [player_affinity][room_nen]
+const COST_TABLE = {
+  Enhancer:    {Enhancer:1,Transmuter:2,Conjurer:3,Manipulator:3,Emitter:2,Specialist:4},
+  Transmuter:  {Enhancer:2,Transmuter:1,Conjurer:2,Manipulator:3,Emitter:3,Specialist:4},
+  Conjurer:    {Enhancer:3,Transmuter:2,Conjurer:1,Manipulator:2,Emitter:3,Specialist:4},
+  Manipulator: {Enhancer:3,Transmuter:3,Conjurer:2,Manipulator:1,Emitter:2,Specialist:4},
+  Emitter:     {Enhancer:2,Transmuter:3,Conjurer:3,Manipulator:2,Emitter:1,Specialist:4},
+  Specialist:  {Enhancer:2,Transmuter:2,Conjurer:2,Manipulator:2,Emitter:2,Specialist:1}
+};
+
+// Shadow Hunter is Emitter
+const HUNTER_AFFINITY = 'Emitter';
+
+const AFFINITIES = [
+  {name:'Enhancer',  desc:'Raw power. Fast in Enhancer rooms. Strong and direct.',   color:'var(--orange)'},
+  {name:'Transmuter',desc:'Adaptive. Quick in Transmuter zones. Unpredictable.',      color:'var(--purple)'},
+  {name:'Conjurer',  desc:'Precise. Excels in Conjurer cells. Strategic entry.',       color:'var(--blue)'},
+  {name:'Manipulator',desc:'Cunning. Controls Manipulator rooms. Methodical paths.',  color:'var(--green)'},
+  {name:'Emitter',   desc:'Like the Hunter. Open-space specialist. Fast everywhere.', color:'var(--cyan)'},
+  {name:'Specialist',desc:'Balanced costs. Unpredictable to opponents. Versatile.',   color:'var(--pink)'}
+];
+
+// ===== MAZE CONSTANTS =====
+const GRID = 20;
+const CENTER = {r:Math.floor(GRID/2),c:Math.floor(GRID/2)};
+const FOG_RADIUS = 2;
+let CELL_SIZE = 28;
+
+// ===== GAME STATE =====
+let maze = [], fog = [], visited = [];
+let player = {r:0,c:0};
+let hunter = {r:GRID-1,c:GRID-1};
+let playerAffinity = null;
+let steps = 0, totalCost = 0;
+let gameOver = false;
+let hunterInterval = null;
+let hunterPath = [];
+let astarPath = [];
+let canvas, ctx;
+
+// ===== AFFINITY SELECTOR =====
+function buildAffinityUI(){
+  const grid = document.getElementById('affinity-grid');
+  AFFINITIES.forEach(a=>{
+    const div = document.createElement('div');
+    div.className = 'aff-btn';
+    div.style.setProperty('--aff-color', a.color);
+    const costs = NEN_KEYS.map(n=>`${NEN[n].short}:${COST_TABLE[a.name][n]}`).join(' ');
+    div.innerHTML = `<div class="aff-name">${a.name.toUpperCase()}</div>
+      <div class="aff-desc">${a.desc}</div>
+      <div class="aff-costs">${costs}</div>`;
+    div.onclick = ()=>{
+      document.querySelectorAll('.aff-btn').forEach(b=>b.classList.remove('selected'));
+      div.classList.add('selected');
+      playerAffinity = a.name;
+      document.getElementById('start-btn').disabled = false;
+    };
+    grid.appendChild(div);
+  });
+}
+
+// ===== MAZE GENERATION (Recursive Backtracker) =====
+function generateMaze(){
+  maze = [];
+  for(let r=0;r<GRID;r++){
+    maze[r]=[];
+    for(let c=0;c<GRID;c++){
+      maze[r][c]={
+        wall:true,
+        nen: NEN_KEYS[Math.floor(Math.random()*NEN_KEYS.length)],
+        visitedGen:false
+      };
+    }
+  }
+  function carve(r,c){
+    maze[r][c].wall=false;
+    maze[r][c].visitedGen=true;
+    const dirs=[[0,2],[0,-2],[2,0],[-2,0]].sort(()=>Math.random()-.5);
+    for(const[dr,dc] of dirs){
+      const nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<GRID&&nc>=0&&nc<GRID&&maze[nr][nc].visitedGen===false){
+        maze[r+dr/2][c+dc/2].wall=false;
+        maze[r+dr/2][c+dc/2].visitedGen=true;
+        carve(nr,nc);
+      }
+    }
+  }
+  // Start carving from top-left (even coords)
+  carve(0,0);
+  // Ensure start, end, center are open
+  maze[0][0].wall=false;
+  maze[GRID-1][GRID-1].wall=false;
+  maze[CENTER.r][CENTER.c].wall=false;
+  // Carve paths around center
+  [[CENTER.r-1,CENTER.c],[CENTER.r,CENTER.c-1],[CENTER.r+1,CENTER.c],[CENTER.r,CENTER.c+1]].forEach(([r,c])=>{
+    if(r>=0&&r<GRID&&c>=0&&c<GRID) maze[r][c].wall=false;
+  });
+}
+
+// ===== FOG OF WAR =====
+function initFog(){
+  fog=[];visited=[];
+  for(let r=0;r<GRID;r++){fog[r]=[];visited[r]=[];for(let c=0;c<GRID;c++){fog[r][c]=true;visited[r][c]=false;}}
+}
+function revealFog(pr,pc){
+  for(let dr=-FOG_RADIUS;dr<=FOG_RADIUS;dr++){
+    for(let dc=-FOG_RADIUS;dc<=FOG_RADIUS;dc++){
+      const nr=pr+dr,nc=pc+dc;
+      if(nr>=0&&nr<GRID&&nc>=0&&nc<GRID){
+        fog[nr][nc]=false;
+        visited[nr][nc]=true;
+      }
+    }
+  }
+}
+
+// ===== A* PATHFINDING =====
+function heuristic(a,b){return Math.abs(a.r-b.r)+Math.abs(a.c-b.c);}
+function aStar(start,goal,affinity){
+  const open=[];
+  const g={};const f={};const came={};
+  const key=(r,c)=>`${r},${c}`;
+  g[key(start.r,start.c)]=0;
+  f[key(start.r,start.c)]=heuristic(start,goal);
+  open.push({r:start.r,c:start.c,f:f[key(start.r,start.c)]});
+  const closed=new Set();
+  while(open.length){
+    open.sort((a,b)=>a.f-b.f);
+    const cur=open.shift();
+    const ck=key(cur.r,cur.c);
+    if(cur.r===goal.r&&cur.c===goal.c){
+      // reconstruct
+      const path=[];let n=ck;
+      while(came[n]){path.unshift(n);n=came[n];}
+      return path.map(k=>{const[r,c]=k.split(',').map(Number);return{r,c};});
+    }
+    closed.add(ck);
+    for(const[dr,dc] of [[0,1],[0,-1],[1,0],[-1,0]]){
+      const nr=cur.r+dr,nc=cur.c+dc;
+      if(nr<0||nr>=GRID||nc<0||nc>=GRID) continue;
+      if(maze[nr][nc].wall) continue;
+      const nk=key(nr,nc);
+      if(closed.has(nk)) continue;
+      const cost=COST_TABLE[affinity][maze[nr][nc].nen];
+      const ng=(g[ck]||0)+cost;
+      if(g[nk]===undefined||ng<g[nk]){
+        came[nk]=ck;g[nk]=ng;
+        f[nk]=ng+heuristic({r:nr,c:nc},goal);
+        if(!open.find(o=>o.r===nr&&o.c===nc)) open.push({r:nr,c:nc,f:f[nk]});
+      }
+    }
+  }
+  return [];
+}
+
+// ===== DRAWING =====
+function getCanvasSize(){
+  const wrap = document.getElementById('canvas-wrap');
+  const maxW = wrap.clientWidth - 4;
+  const maxH = wrap.clientHeight - 4;
+  CELL_SIZE = Math.floor(Math.min(maxW/GRID, maxH/GRID));
+  if(CELL_SIZE<14) CELL_SIZE=14;
+  return CELL_SIZE*GRID;
+}
+
+function draw(){
+  if(!ctx) return;
+  const sz=CELL_SIZE*GRID;
+  canvas.width=sz;canvas.height=sz;
+  ctx.clearRect(0,0,sz,sz);
+
+  // A* path (visible only in revealed cells)
+  const pathSet=new Set(astarPath.map(p=>`${p.r},${p.c}`));
+
+  for(let r=0;r<GRID;r++){
+    for(let c=0;c<GRID;c++){
+      const x=c*CELL_SIZE,y=r*CELL_SIZE;
+      const cell=maze[r][c];
+      const isFog=fog[r][c];
+      const isVisited=visited[r][c];
+
+      if(isFog&&!isVisited){
+        ctx.fillStyle='#060608';
+        ctx.fillRect(x,y,CELL_SIZE,CELL_SIZE);
+        continue;
+      }
+      if(cell.wall){
+        ctx.fillStyle=isVisited?'#1a1520':'#0f0d12';
+        ctx.fillRect(x,y,CELL_SIZE,CELL_SIZE);
+        // wall texture
+        ctx.strokeStyle='#2a2030';ctx.lineWidth=.3;
+        ctx.strokeRect(x+.5,y+.5,CELL_SIZE-1,CELL_SIZE-1);
+        continue;
+      }
+
+      // Path cell — color by nen type
+      const nenColor=NEN[cell.nen].color;
+      const alpha=isFog?0.15:isVisited?0.18:0.25;
+      ctx.fillStyle=`#0e0e18`;
+      ctx.fillRect(x,y,CELL_SIZE,CELL_SIZE);
+      ctx.fillStyle=nenColor+(Math.round(alpha*255).toString(16).padStart(2,'0'));
+      ctx.fillRect(x,y,CELL_SIZE,CELL_SIZE);
+
+      // A* path highlight
+      if(!isFog && pathSet.has(`${r},${c}`) && !(r===player.r&&c===player.c)){
+        ctx.fillStyle='#ffffff11';
+        ctx.fillRect(x+2,y+2,CELL_SIZE-4,CELL_SIZE-4);
+        ctx.strokeStyle='#4b8bc866';ctx.lineWidth=1;
+        ctx.strokeRect(x+2.5,y+2.5,CELL_SIZE-5,CELL_SIZE-5);
+      }
+
+      // Center marker
+      if(r===CENTER.r&&c===CENTER.c){
+        ctx.fillStyle='#c8a84b33';
+        ctx.fillRect(x,y,CELL_SIZE,CELL_SIZE);
+        ctx.strokeStyle=`${NEN[cell.nen].color}88`;ctx.lineWidth=1.5;
+        ctx.beginPath();
+        const cx=x+CELL_SIZE/2,cy=y+CELL_SIZE/2,rs=CELL_SIZE*.3;
+        for(let i=0;i<5;i++){
+          const angle=Math.PI/2+i*4*Math.PI/5;
+          const r2=i%2===0?rs:rs*.4;
+          i===0?ctx.moveTo(cx+r2*Math.cos(angle),cy-r2*Math.sin(angle)):ctx.lineTo(cx+r2*Math.cos(angle),cy-r2*Math.sin(angle));
+        }
+        ctx.closePath();ctx.strokeStyle='#c8a84b88';ctx.stroke();
+      }
+
+      // Nen type indicator (tiny dot)
+      if(!isFog && CELL_SIZE>=18){
+        ctx.fillStyle=nenColor+'cc';
+        ctx.beginPath();ctx.arc(x+CELL_SIZE-4,y+4,2,0,Math.PI*2);ctx.fill();
+      }
+
+      // Fog reveal border
+      if(isFog && isVisited){
+        ctx.fillStyle='#060608aa';
+        ctx.fillRect(x,y,CELL_SIZE,CELL_SIZE);
+      }
+    }
+  }
+
+  // Draw adjacency hints (clickable neighbors)
+  for(const[dr,dc] of [[0,1],[0,-1],[1,0],[-1,0]]){
+    const nr=player.r+dr,nc=player.c+dc;
+    if(nr<0||nr>=GRID||nc<0||nc>=GRID) continue;
+    if(maze[nr][nc].wall) continue;
+    const x=nc*CELL_SIZE,y=nr*CELL_SIZE;
+    ctx.fillStyle='#ffffff08';
+    ctx.fillRect(x+1,y+1,CELL_SIZE-2,CELL_SIZE-2);
+    ctx.strokeStyle='#ffffff22';ctx.lineWidth=1;
+    ctx.strokeRect(x+1.5,y+1.5,CELL_SIZE-3,CELL_SIZE-3);
+  }
+
+  // Draw hunter path (only in revealed cells)
+  hunterPath.slice(0,5).forEach((p,i)=>{
+    if(!visited[p.r]&&!fog[p.r]) return;
+    if(fog[p.r][p.c]&&!visited[p.r][p.c]) return;
+    const x=p.c*CELL_SIZE,y=p.r*CELL_SIZE;
+    ctx.fillStyle=`rgba(200,75,75,${0.15-i*0.02})`;
+    ctx.fillRect(x,y,CELL_SIZE,CELL_SIZE);
+  });
+
+  // Hunter
+  if(visited[hunter.r]&&visited[hunter.r][hunter.c]||!fog[hunter.r]||!fog[hunter.r][hunter.c]){
+    const hx=hunter.c*CELL_SIZE+CELL_SIZE/2;
+    const hy=hunter.r*CELL_SIZE+CELL_SIZE/2;
+    const hr=CELL_SIZE*.35;
+    ctx.fillStyle='#c84b4b';
+    ctx.beginPath();
+    // Diamond shape for hunter
+    ctx.moveTo(hx,hy-hr);ctx.lineTo(hx+hr*.7,hy);
+    ctx.lineTo(hx,hy+hr);ctx.lineTo(hx-hr*.7,hy);
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#ff8888';ctx.lineWidth=1.5;ctx.stroke();
+    if(CELL_SIZE>=18){
+      ctx.fillStyle='#fff';ctx.font=`bold ${Math.max(7,CELL_SIZE*.28)}px Share Tech Mono`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('H',hx,hy);
+    }
+  }
+
+  // Player
+  {
+    const px=player.c*CELL_SIZE+CELL_SIZE/2;
+    const py=player.r*CELL_SIZE+CELL_SIZE/2;
+    const pr=CELL_SIZE*.38;
+    ctx.fillStyle='#4bc87a';
+    ctx.beginPath();ctx.arc(px,py,pr,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#88ffaa';ctx.lineWidth=2;ctx.stroke();
+    if(CELL_SIZE>=18){
+      ctx.fillStyle='#001a00';ctx.font=`bold ${Math.max(7,CELL_SIZE*.3)}px Share Tech Mono`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('P',px,py);
+    }
+  }
+}
+
+// ===== COMPASS UPDATE =====
+function updateCompass(){
+  const dr=CENTER.r-player.r;
+  const dc=CENTER.c-player.c;
+  const dist=Math.round(Math.hypot(dr,dc));
+  const angle=Math.atan2(dc,dr)*(180/Math.PI);
+  document.getElementById('compass-needle').style.transform=
+    `translate(-50%,-100%) rotate(${angle+90}deg)`;
+  document.getElementById('compass-dist').textContent=`${dist} cells`;
+
+  // Direction label
+  const dirs=[];
+  if(dr<-1) dirs.push('N'); if(dr>1) dirs.push('S');
+  if(dc<-1) dirs.push('W'); if(dc>1) dirs.push('E');
+}
+
+// ===== STATS UPDATE =====
+function updateStats(){
+  document.getElementById('stat-steps').textContent=steps;
+  document.getElementById('stat-cost').textContent=totalCost;
+  const hd=Math.round(Math.hypot(hunter.r-CENTER.r,hunter.c-CENTER.c));
+  const pd=Math.round(Math.hypot(player.r-CENTER.r,player.c-CENTER.c));
+  document.getElementById('stat-hunter').textContent=hd+' cells';
+  document.getElementById('stat-pdist').textContent=pd+' cells';
+
+  // Recalculate A* path for player
+  astarPath=aStar(player,CENTER,playerAffinity);
+  const pathCost=astarPath.reduce((s,p)=>s+COST_TABLE[playerAffinity][maze[p.r][p.c].nen],0);
+  document.getElementById('path-info').textContent=
+    astarPath.length>0?`${astarPath.length} steps, est. cost ${pathCost}`:'No path found';
+}
+
+// ===== HUNTER AI =====
+function moveHunter(){
+  if(gameOver) return;
+  hunterPath=aStar(hunter,CENTER,HUNTER_AFFINITY);
+  if(hunterPath.length>0){
+    const next=hunterPath[0];
+    hunter.r=next.r;hunter.c=next.c;
+    addLog(`Shadow Hunter moves [${hunter.r},${hunter.c}]`,'hunter');
+  }
+  draw();
+  updateCompass();
+  updateStats();
+  checkWin();
+}
+
+// ===== WIN/LOSE CHECK =====
+function checkWin(){
+  const pd=Math.abs(player.r-CENTER.r)+Math.abs(player.c-CENTER.c);
+  const hd=Math.abs(hunter.r-CENTER.r)+Math.abs(hunter.c-CENTER.c);
+  if(pd<=1){
+    endGame(true,'You reached the center first!\n\n"The Nen Compass never lies." — Killua');
+  } else if(hd<=1){
+    endGame(false,'The Shadow Hunter reached the center first.\n\n"Next time, use the corridors." — Killua');
+  } else if(hunter.r===player.r&&hunter.c===player.c){
+    endGame(false,'The Shadow Hunter caught you!\n\n"You cannot outrun perfection." — Anonymous');
+  }
+}
+
+function endGame(won, msg){
+  gameOver=true;
+  clearInterval(hunterInterval);
+  addLog(won?'YOU WIN! Center reached!':'DEFEATED. The Hunter won.', won?'win':'hunter');
+  setTimeout(()=>{
+    document.getElementById('modal-title').textContent=won?'✦ VICTORY ✦':'✦ DEFEATED ✦';
+    document.getElementById('modal-sub').textContent=
+      `Steps: ${steps} | Total Aura Cost: ${totalCost}\n\n${msg}`;
+    document.getElementById('modal').style.display='flex';
+  },400);
+}
+
+// ===== LOG =====
+function addLog(msg,type='info'){
+  const log=document.getElementById('log-area');
+  const div=document.createElement('div');
+  div.className=`log-entry ${type}`;
+  div.textContent=msg;
+  log.appendChild(div);
+  log.scrollTop=log.scrollHeight;
+  // keep only last 40 entries
+  while(log.children.length>40) log.removeChild(log.firstChild);
+}
+
+// ===== PLAYER MOVE =====
+function tryMove(tr,tc){
+  if(gameOver) return;
+  if(tr<0||tr>=GRID||tc<0||tc>=GRID) return;
+  if(maze[tr][tc].wall){addLog(`Wall! Can't move there.`,'warn');return;}
+  const dr=Math.abs(tr-player.r),dc=Math.abs(tc-player.c);
+  if(dr+dc!==1){addLog('Can only move to adjacent cells.','warn');return;}
+  const cost=COST_TABLE[playerAffinity][maze[tr][tc].nen];
+  player.r=tr;player.c=tc;
+  steps++;totalCost+=cost;
+  revealFog(player.r,player.c);
+  addLog(`→ [${player.r},${player.c}] ${maze[tr][tc].nen} room (cost ${cost})`,'move');
+  draw();updateCompass();updateStats();checkWin();
+}
+
+// ===== CANVAS CLICK =====
+function onCanvasClick(e){
+  if(gameOver) return;
+  const rect=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/rect.width;
+  const scaleY=canvas.height/rect.height;
+  const x=(e.clientX-rect.left)*scaleX;
+  const y=(e.clientY-rect.top)*scaleY;
+  const tc=Math.floor(x/CELL_SIZE);
+  const tr=Math.floor(y/CELL_SIZE);
+  tryMove(tr,tc);
+}
+
+// ===== KEYBOARD =====
+document.addEventListener('keydown',e=>{
+  if(gameOver) return;
+  switch(e.key){
+    case 'ArrowUp':case'w':case'W': tryMove(player.r-1,player.c);e.preventDefault();break;
+    case 'ArrowDown':case's':case'S': tryMove(player.r+1,player.c);e.preventDefault();break;
+    case 'ArrowLeft':case'a':case'A': tryMove(player.r,player.c-1);e.preventDefault();break;
+    case 'ArrowRight':case'd':case'D': tryMove(player.r,player.c+1);e.preventDefault();break;
+  }
+});
+
+// ===== BUILD LEGEND =====
+function buildLegend(){
+  const leg=document.getElementById('nen-legend');
+  leg.innerHTML='';
+  NEN_KEYS.forEach(n=>{
+    const cost=COST_TABLE[playerAffinity][n];
+    const row=document.createElement('div');row.className='legend-row';
+    row.innerHTML=`<div class="legend-dot" style="background:${NEN[n].color}"></div>
+      <div class="legend-name">${n}</div>
+      <div class="legend-cost" style="color:${cost===1?'#4bc87a':cost<=2?'#c8c84b':cost<=3?'#c87a4b':'#c84b4b'}">${cost}</div>`;
+    leg.appendChild(row);
+  });
+}
+
+function buildCostTable(){
+  const ct=document.getElementById('cost-table');
+  ct.innerHTML='';
+  NEN_KEYS.forEach(n=>{
+    const cost=COST_TABLE[playerAffinity][n];
+    const pill=document.createElement('div');pill.className='cost-pill';
+    pill.style.borderColor=NEN[n].color+'66';
+    pill.style.color=cost===1?'#4bc87a':cost<=2?'#c8c84b':cost<=3?'#c87a4b':'#c84b4b';
+    pill.textContent=`${NEN[n].short}:${cost}`;
+    ct.appendChild(pill);
+  });
+}
+
+// ===== START GAME =====
+function startGame(){
+  document.getElementById('affinity-screen').style.display='none';
+  document.getElementById('game-screen').style.display='flex';
+
+  canvas=document.getElementById('maze-canvas');
+  ctx=canvas.getContext('2d');
+  canvas.onclick=onCanvasClick;
+
+  generateMaze();
+  initFog();
+
+  player={r:0,c:0};
+  hunter={r:GRID-1,c:GRID-1};
+  steps=0;totalCost=0;gameOver=false;
+  astarPath=[];hunterPath=[];
+
+  revealFog(0,0);
+  revealFog(GRID-1,GRID-1); // hunter starts visible
+
+  document.getElementById('stat-aff').textContent=playerAffinity.toUpperCase();
+  buildLegend();
+  buildCostTable();
+
+  // Set canvas size
+  setTimeout(()=>{
+    getCanvasSize();
+    draw();
+    updateCompass();
+    updateStats();
+  },50);
+
+  addLog('Labyrinth entered. Find the center.','info');
+  addLog('Shadow Hunter activates. It moves in 2s.','warn');
+  addLog('Click adj. cells or use WASD / Arrow keys.','info');
+
+  clearInterval(hunterInterval);
+  // Hunter moves every 1.5 seconds
+  hunterInterval=setInterval(()=>{if(!gameOver)moveHunter();},1500);
+
+  window.addEventListener('resize',()=>{
+    getCanvasSize();draw();
+  });
+}
+
+// ===== RESET =====
+function resetGame(){
+  clearInterval(hunterInterval);
+  document.getElementById('modal').style.display='none';
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('affinity-screen').style.display='flex';
+  document.querySelectorAll('.aff-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('start-btn').disabled=true;
+  document.getElementById('log-area').innerHTML='';
+  playerAffinity=null;
+  steps=0;totalCost=0;
+}
+
+// ===== INIT =====
+buildAffinityUI();
+</script>

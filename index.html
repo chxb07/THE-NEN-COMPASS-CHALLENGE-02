@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GREED ISLAND — Card Matcher</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ░░░ SPLASH SCREEN ░░░ -->
+<div id="splash">
+  <div class="splash-inner">
+    <div class="splash-badge">GREED ISLAND</div>
+    <h1 class="splash-title">CARD<br>MATCHER</h1>
+    <div class="splash-subtitle">67th Floor · Central Tower</div>
+
+    <div class="splash-quote-block">
+      <div class="splash-avatar">🃏</div>
+      <div class="splash-quote">
+        "You have 60 seconds. Find all 20 pairs.<br>
+        But here's the catch — every time you flip a card,<br>
+        the probability distribution updates."
+        <div class="splash-speaker">— Hisoka</div>
+      </div>
+    </div>
+
+    <div class="splash-rules">
+      <div class="rule-item">⚡ Flip cards to find matching pairs</div>
+      <div class="rule-item">📊 Probability hints update after every flip</div>
+      <div class="rule-item">💀 3 mismatches in a row triggers Bungee Gum</div>
+      <div class="rule-item">🔍 Find the hidden pattern for a bonus</div>
+      <div class="rule-item">⭐ Hint button costs 3 points</div>
+    </div>
+
+    <button id="start-btn" class="btn-primary">ENTER THE TOWER</button>
+  </div>
+</div>
+
+<!-- ░░░ GAME AREA ░░░ -->
+<div id="game-area">
+
+  <header class="game-header">
+    <div class="header-left">
+      <span class="gi-logo">GREED ISLAND</span>
+    </div>
+    <div id="score-panel" class="score-panel"></div>
+    <div class="header-right">
+      <button id="hint-btn" class="btn-hint" title="Highlight highest-probability card (-3pts)">
+        💡 HINT
+      </button>
+      <button id="restart-btn" class="btn-restart">↺</button>
+    </div>
+  </header>
+
+  <main class="game-main">
+    <div class="sidebar-left">
+      <div id="prob-overlay" class="prob-overlay-panel"></div>
+      <div class="hisoka-panel">
+        <div class="hisoka-img">🃏</div>
+        <div class="hisoka-line" id="hisoka-quote">
+          "Every card has a secret. The question is... can you hear them?"
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-wrapper">
+      <div id="card-grid" class="card-grid"></div>
+    </div>
+
+    <div class="sidebar-right">
+      <div class="tips-panel">
+        <div class="tips-title">HUNTER INTEL</div>
+        <div class="tip-item">
+          <span class="tip-icon">🟢</span>
+          <span><b>70%+</b> = Strong match signal</span>
+        </div>
+        <div class="tip-item">
+          <span class="tip-icon">🟡</span>
+          <span><b>40–69%</b> = Possible match</span>
+        </div>
+        <div class="tip-item">
+          <span class="tip-icon">🔴</span>
+          <span><b>&lt;40%</b> = Unlikely</span>
+        </div>
+        <div class="tip-divider"></div>
+        <div class="tip-item">
+          <span class="tip-icon">📐</span>
+          <span>Adjacent cards: <b>+20%</b> bonus</span>
+        </div>
+        <div class="tip-item">
+          <span class="tip-icon">⚠</span>
+          <span>Nen distortion may <b>lie</b></span>
+        </div>
+        <div class="tip-item">
+          <span class="tip-icon">🔍</span>
+          <span>Find the hidden <b>pattern</b></span>
+        </div>
+        <div class="tip-divider"></div>
+        <div class="killua-quote">
+          "Adjacent cards share aura. Check neighbors first."
+          <div class="quote-attr">— Killua</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<!-- ░░░ GAME OVER ░░░ -->
+<div id="gameover-screen">
+  <div class="go-inner">
+    <div class="go-badge">GREED ISLAND</div>
+    <h2 id="go-title" class="go-title"></h2>
+    <p id="go-reason" class="go-reason"></p>
+    <div class="go-stats">
+      <div class="go-stat" id="go-score"></div>
+      <div class="go-stat" id="go-moves"></div>
+      <div class="go-stat" id="go-pairs"></div>
+      <div class="go-stat" id="go-efficiency"></div>
+      <div class="go-stat go-pattern-stat" id="go-pattern"></div>
+    </div>
+    <button id="restart-btn-go" class="btn-primary" onclick="document.getElementById('restart-btn').click(); document.getElementById('gameover-screen').style.display='none'; document.getElementById('game-area').style.display='flex';">
+      PLAY AGAIN
+    </button>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
